@@ -1,0 +1,88 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    function hasOnlyAllowedFields(fields) {
+      return request.resource.data.keys().hasOnly(fields);
+    }
+
+    // ===============================================================
+    // Domain Validators
+    // ===============================================================
+    
+    function isValidTheme(theme) {
+      return theme == null || (
+        theme is map &&
+        (!('backgroundColor' in theme) || (theme.backgroundColor is string && theme.backgroundColor.size() <= 30)) &&
+        (!('textColor' in theme) || (theme.textColor is string && theme.textColor.size() <= 30)) &&
+        (!('buttonColor' in theme) || (theme.buttonColor is string && theme.buttonColor.size() <= 30)) &&
+        (!('buttonTextColor' in theme) || (theme.buttonTextColor is string && theme.buttonTextColor.size() <= 30))
+      );
+    }
+
+    function isValidUser(data) {
+      return hasOnlyAllowedFields(['uid', 'username', 'name', 'bio', 'profileImageUrl', 'theme']) &&
+             data.uid is string &&
+             data.username is string && data.username.size() >= 3 && data.username.size() <= 30 &&
+             data.name is string && data.name.size() > 0 && data.name.size() <= 50 &&
+             (!('bio' in data) || (data.bio is string && data.bio.size() <= 160)) &&
+             (!('profileImageUrl' in data) || (data.profileImageUrl is string && data.profileImageUrl.size() <= 500000)) &&
+             (!('theme' in data) || isValidTheme(data.theme));
+    }
+    
+    function isValidLink(data) {
+      return hasOnlyAllowedFields(['userId', 'title', 'url', 'isActive', 'order']) &&
+             data.userId is string &&
+             data.title is string && data.title.size() > 0 && data.title.size() <= 100 &&
+             data.url is string && data.url.size() > 0 && data.url.size() <= 1000 &&
+             data.isActive is bool &&
+             data.order is number;
+    }
+
+    // ===============================================================
+    // Rules
+    // ===============================================================
+    
+    match /users/{userId} {
+      // Public read so the profile page can load
+      allow read: if true;
+      
+      allow create: if isOwner(userId) && 
+                       isValidUser(request.resource.data) && 
+                       request.resource.data.uid == userId;
+                       
+      allow update: if isOwner(userId) && 
+                       isValidUser(request.resource.data) && 
+                       request.resource.data.uid == resource.data.uid;
+                       
+      allow delete: if isOwner(userId);
+    }
+    
+    match /links/{linkId} {
+      // Public read so the profile page can load links
+      allow read: if true;
+      
+      allow create: if isAuthenticated() && 
+                       isValidLink(request.resource.data) && 
+                       request.resource.data.userId == request.auth.uid;
+                       
+      allow update: if isAuthenticated() && 
+                       resource.data.userId == request.auth.uid &&
+                       isValidLink(request.resource.data) && 
+                       request.resource.data.userId == resource.data.userId;
+                       
+      allow delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
+    }
+  }
+}

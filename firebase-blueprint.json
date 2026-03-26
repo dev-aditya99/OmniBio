@@ -1,0 +1,40 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "Public profile information for a creator.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "description": "Firebase Auth UID" },
+        "username": { "type": "string", "description": "Unique username for the public URL" },
+        "name": { "type": "string", "description": "Display name" },
+        "bio": { "type": "string", "description": "Short biography" },
+        "profileImageUrl": { "type": "string", "description": "URL to profile picture" }
+      },
+      "required": ["uid", "username", "name"]
+    },
+    "Link": {
+      "title": "Link",
+      "description": "A link added by a creator to their profile.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "Firebase Auth UID of the owner" },
+        "title": { "type": "string", "description": "Display title of the link" },
+        "url": { "type": "string", "description": "The actual URL" },
+        "isActive": { "type": "boolean", "description": "Whether the link is currently visible" },
+        "order": { "type": "number", "description": "Order index for sorting" }
+      },
+      "required": ["userId", "title", "url", "isActive", "order"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/User" },
+      "description": "Stores public user profiles."
+    },
+    "/links/{linkId}": {
+      "schema": { "$ref": "#/entities/Link" },
+      "description": "Stores all links created by users."
+    }
+  }
+}
