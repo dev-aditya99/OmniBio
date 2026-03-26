@@ -53,7 +53,3 @@ Make sure you have Node.js installed on your system.
 - GitHub: [@dev-aditya99](https://github.com/dev-aditya99)
 
 _Built with ❤️ for creators._
-
-```
-
-```
