@@ -4,10 +4,11 @@ import { getUserByUsername } from "@/lib/db";
 export async function generateMetadata({
   params,
 }: {
-  params: Promise<{ username: string }>;
+  params: Promise<{ username: string; url: string }>;
 }): Promise<Metadata> {
   const resolvedParams = await params;
   const profile = await getUserByUsername(resolvedParams.username);
+  const sharedURL = decodeURIComponent(resolvedParams.url as string);
 
   if (!profile) {
     return {
@@ -16,21 +17,22 @@ export async function generateMetadata({
   }
 
   return {
-    title: `${profile.name} (@${profile.username}) | OmniBio`,
-    description: profile.bio || `Check out ${profile.name}'s links on OmniBio.`,
+    title: `${profile.name} (@${profile.username}) | Shared Link | OmniBio`,
+    description:
+      profile.bio || `Check out ${profile.name}'s shared link. ${sharedURL}`,
     openGraph: {
-      title: `${profile.name} (@${profile.username}) | OmniBio`,
+      title: `${profile.name} (@${profile.username}) | Shared Link | OmniBio`,
       description:
-        profile.bio || `Check out ${profile.name}'s links on OmniBio.`,
+        profile.bio || `Check out ${profile.name}'s shared link. ${sharedURL}`,
       images: profile.profileImageUrl
         ? [profile.profileImageUrl]
         : "https://ik.imagekit.io/adityazvs6yuayk/logos/OmniBio-Square-Transparent-Logo-1.png",
     },
     twitter: {
       card: "summary_large_image",
-      title: `${profile.name} (@${profile.username}) | OmniBio`,
+      title: `${profile.name} (@${profile.username}) | Shared Link | OmniBio`,
       description:
-        profile.bio || `Check out ${profile.name}'s links on OmniBio.`,
+        profile.bio || `Check out ${profile.name}'s shared link. ${sharedURL}`,
       images: profile.profileImageUrl
         ? [profile.profileImageUrl]
         : "https://ik.imagekit.io/adityazvs6yuayk/logos/OmniBio-Square-Transparent-Logo-1.png",
